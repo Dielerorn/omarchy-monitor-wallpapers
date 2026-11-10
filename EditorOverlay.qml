@@ -494,6 +494,7 @@ Item {
               Layout.fillWidth: true
               Layout.fillHeight: true
               WallpaperFrame {
+                id: stageFrame
                 anchors.centerIn: parent
                 width: root.canvas().width > 0 && root.canvas().height > 0
                   ? Math.min(parent.width, parent.height * root.canvas().width / root.canvas().height) : parent.width
@@ -508,6 +509,20 @@ Item {
                 canvasHeight: root.canvas().height
                 record: root.record()
                 onFailed: root.errorText = "Could not open this image. Choose another image."
+                Rectangle {
+                  anchors.fill: parent
+                  visible: stageFrame.video
+                  color: Commons.Color.popups.background
+                  border.color: Commons.Color.popups.border
+                  border.width: 1
+                  Text {
+                    anchors.centerIn: parent
+                    textFormat: Text.PlainText
+                    text: "Theme video wallpaper"
+                    color: Commons.Color.foreground
+                    font.pixelSize: Style.font.caption
+                  }
+                }
               }
             }
             Text { text: root.selectionReady ? "Image: " + root.prepared.width + " × " + root.prepared.height + " px" : root.imagePath ? (prepareProcess.running ? "Preparing image…" : "Image is not prepared") : "Theme wallpaper"; color: Commons.Color.foreground; wrapMode: Text.WordWrap; Layout.fillWidth: true; Layout.minimumWidth: 0 }
