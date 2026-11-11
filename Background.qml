@@ -67,6 +67,9 @@ Item {
       var lastGood = editorLastGood[screenName]
       return lastGood ? lastGood.path : fallback
     }
+    if (record.image && isVideo(record.image) && !editorPreview[screenName] && !isVideo(currentBackground)) {
+      return fallback
+    }
     return record.image || fallback
   }
   function noteImageFailure(screenName) {
@@ -126,11 +129,25 @@ Item {
       clearUnavailable(name)
       var errors = Object.assign({}, editorErrors); delete errors[name]; editorErrors = errors
       editorPreview = Object.assign({}, editorPreview, (function(){ var o={}; o[name]=record; return o })())
+      if (record.image && isVideo(record.image)) {
+        Util.execArgv(["ln", "-nsf", record.image, currentBackgroundLink])
+      }
       editorRevision++
       editorPreviewTimer.restart()
     } catch (e) { editorErrors = Object.assign({}, editorErrors, (function(){ var o={}; o[name]=String(e); return o })()); editorRevision++ }
   }
-  function cancelEditorPreview() { editorPreview = ({}); editorPreviewTimer.stop(); editorRevision++ }
+  function cancelEditorPreview() {
+    var hadVideoPreview = false
+    for (var key in editorPreview) {
+      if (editorPreview[key] && editorPreview[key].image && isVideo(editorPreview[key].image)) hadVideoPreview = true
+    }
+    editorPreview = ({})
+    editorPreviewTimer.stop()
+    if (hadVideoPreview && currentBackground) {
+      Util.execArgv(["ln", "-nsf", currentBackground, currentBackgroundLink])
+    }
+    editorRevision++
+  }
   function saveMonitor(name, json) {
     if (editorSaveProc.running || editorSaveQueued) return
     try {
@@ -311,11 +328,15 @@ Item {
     id: editorSaveProc
     onExited: function(exitCode) {
       if (exitCode === 0) {
+        var savedImage = root.editorPendingRecord ? root.editorPendingRecord.image : ""
         root.editorConfig = root.editorPendingConfig
         root.editorPreview = ({})
         editorPreviewTimer.stop()
-        clearUnavailable(root.editorPendingMonitor, root.editorPendingRecord.image)
+        clearUnavailable(root.editorPendingMonitor, savedImage)
         root.editorErrors = ({})
+        if (savedImage && root.isVideo(savedImage)) {
+          Util.execArgv(["omarchy-theme-bg-set", savedImage])
+        }
       } else root.editorErrors = Object.assign({}, root.editorErrors, ({ save: "Could not save wallpaper settings. Try again." }))
       root.editorRevision++
     }

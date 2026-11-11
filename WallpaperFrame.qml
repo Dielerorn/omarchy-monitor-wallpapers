@@ -7,8 +7,9 @@ Item {
   id: root
   property string source: ""
   property string originalSource: ""
+  property bool renderVideoPreview: false
   readonly property string activeSource: originalSource || source
-  readonly property bool video: Util.isVideoPath(activeSource)
+  readonly property bool video: !renderVideoPreview && Util.isVideoPath(activeSource)
   property int rotation: 0
   property string preparedSource: ""
   property int preparedRotation: -1
